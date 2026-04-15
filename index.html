@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Compteur de jeûne</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>Compteur de jeûne</h1>
+    <button id="themeToggle" class="icon-btn" aria-label="Basculer le mode sombre">
+      <span id="themeIcon">🌙</span>
+    </button>
+  </header>
+
+  <main class="app-main">
+
+    <!-- Carte principale : timer -->
+    <section class="card timer-card" aria-live="polite">
+      <p class="timer-label" id="timerLabel">Aucun jeûne en cours</p>
+      <div class="timer-display" id="timerDisplay">00:00:00</div>
+      <p class="timer-start" id="timerStart"></p>
+
+      <div class="phase-block">
+        <div class="phase-header">
+          <span class="phase-name" id="phaseName">—</span>
+          <span class="phase-range" id="phaseRange"></span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <p class="phase-desc" id="phaseDesc">Appuie sur « Commencer le jeûne » pour démarrer.</p>
+      </div>
+
+      <div class="actions">
+        <button id="startBtn" class="btn btn-primary">Commencer le jeûne maintenant</button>
+        <button id="stopBtn" class="btn btn-danger hidden">J'ai mangé</button>
+      </div>
+    </section>
+
+    <!-- Phases indicatives -->
+    <section class="card">
+      <h2>Phases du jeûne</h2>
+      <ul class="phases-list" id="phasesList"></ul>
+    </section>
+
+    <!-- Historique -->
+    <section class="card">
+      <h2>Historique (10 derniers jeûnes)</h2>
+      <ul class="history-list" id="historyList">
+        <li class="empty-state">Aucun jeûne enregistré pour l'instant.</li>
+      </ul>
+      <button id="clearHistoryBtn" class="btn btn-ghost hidden">Effacer l'historique</button>
+    </section>
+
+    <!-- Avertissement médical -->
+    <section class="card disclaimer">
+      <h2>⚠️ Avertissement</h2>
+      <p>
+        Cette application est un outil <strong>personnel</strong> de suivi.
+        Elle ne remplace en aucun cas un avis médical.
+        <strong>Consulte un médecin</strong> avant d'entreprendre un jeûne prolongé,
+        notamment si tu es enceinte, diabétique, sous traitement, ou souffres
+        d'une pathologie particulière.
+      </p>
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -25,7 +25,6 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -192,6 +191,10 @@ body {
   opacity: .55;
   margin: 8px 0 0;
   letter-spacing: .05em;
+}
+.version-tag a {
+  color: inherit;
+  text-decoration: underline;
 }
 
 /* =========================================================

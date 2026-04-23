@@ -10,7 +10,7 @@
    ========================================================= */
 
 // -------- Constantes --------
-const APP_VERSION      = 'v0.4';
+const APP_VERSION      = 'v0.5';
 const NAMES_KEY        = 'memoireTrio.names';
 
 const TILE_COUNT       = 6;
@@ -76,6 +76,7 @@ const el = {
   replayBtn: document.getElementById('replayBtn'),
   homeBtn: document.getElementById('homeBtn'),
   versionTag: document.getElementById('versionTag'),
+  reloadLink: document.getElementById('reloadLink'),
 };
 
 // -------- État --------
@@ -585,3 +586,10 @@ function bindEvents() {
 bindEvents();
 restoreNames();
 el.versionTag.textContent = APP_VERSION;
+el.reloadLink.addEventListener('click', (e) => {
+  e.preventDefault();
+  // Force une requête fraîche côté serveur en contournant le cache
+  const url = new URL(location.href);
+  url.searchParams.set('r', Date.now());
+  location.replace(url.toString());
+});

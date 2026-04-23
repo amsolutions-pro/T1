@@ -7,7 +7,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Mémoire Trio — jeu de file d'attente</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <link rel="stylesheet" href="style.css?v=0.5" />
 </head>
 <body>
 
@@ -51,7 +54,10 @@
 
       <button class="btn btn-primary btn-xl" id="startBtn">C'est parti</button>
 
-      <p class="version-tag" id="versionTag"></p>
+      <p class="version-tag">
+        <span id="versionTag"></span>
+        · <a href="#" id="reloadLink">recharger</a>
+      </p>
     </div>
   </section>
 
@@ -125,6 +131,6 @@
     </div>
   </section>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=0.5"></script>
 </body>
 </html>

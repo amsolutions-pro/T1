@@ -62,6 +62,7 @@ const el = {
   board: document.getElementById('board'),
   tiles: Array.from(document.querySelectorAll('.tile')),
   feedback: document.getElementById('feedback'),
+  hudJoker: document.getElementById('hudJoker'),
   // paused
   resumeBtn: document.getElementById('resumeBtn'),
   quitBtn: document.getElementById('quitBtn'),
@@ -97,6 +98,7 @@ function newGame(names) {
     paused: false,
     ended: false,
     watchToken: 0,
+    correctionAvailable: true,
   };
 }
 
@@ -142,6 +144,21 @@ function playError() {
   osc.connect(gain).connect(ctx.destination);
   osc.start();
   osc.stop(ctx.currentTime + 0.45);
+}
+
+function playWarn() {
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(330, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.18);
+  gain.gain.setValueAtTime(0.18, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.25);
 }
 
 function playSuccess() {
@@ -208,6 +225,7 @@ function renderPassScreen() {
 function startTurn() {
   state.sequence = sequenceFor(state.nextLength);
   state.inputIdx = 0;
+  state.correctionAvailable = true;
   state.phase = 'watch';
   showScreen('game');
   updateHUD();
@@ -267,11 +285,29 @@ function onTileTap(idx) {
 
   const expected = state.sequence[state.inputIdx];
   if (idx !== expected) {
+    if (state.correctionAvailable) {
+      state.correctionAvailable = false;
+      updateHUD();
+      el.hudStatus.textContent = '2ᵉ chance — retente cette case';
+      el.hudStatus.className = 'hud-status is-ko';
+      el.feedback.textContent = 'Joker utilisé, pas de vie perdue !';
+      el.feedback.className = 'feedback ko';
+      playWarn();
+      vibrate(80);
+      return;
+    }
     handleFail();
     return;
   }
   state.inputIdx++;
   updateProgress();
+  // Après une correction, on remet le status "À toi de jouer" pour signaler que ça continue
+  if (!state.correctionAvailable && state.inputIdx < state.sequence.length) {
+    el.hudStatus.textContent = 'À toi de jouer';
+    el.hudStatus.className = 'hud-status is-play';
+    el.feedback.textContent = '';
+    el.feedback.className = 'feedback';
+  }
   if (state.inputIdx >= state.sequence.length) {
     handleSuccess();
   }
@@ -359,6 +395,13 @@ function updateHUD() {
   const p = state.players[state.currentIdx];
   el.hudPlayer.textContent = p.name;
   el.hudLives.textContent = hearts(p.lives);
+  if (state.correctionAvailable) {
+    el.hudJoker.textContent = '🔄 joker';
+    el.hudJoker.classList.remove('used');
+  } else {
+    el.hudJoker.textContent = '🔄 utilisé';
+    el.hudJoker.classList.add('used');
+  }
 }
 
 // -------- Timer global --------

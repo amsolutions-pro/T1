@@ -263,6 +263,18 @@ body {
   letter-spacing: 3px;
   font-size: .95rem;
 }
+.hud-joker {
+  margin: 2px 0 0;
+  font-size: .72rem;
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: .03em;
+}
+.hud-joker.used {
+  color: var(--text-dim);
+  opacity: .55;
+  text-decoration: line-through;
+}
 .hud-status {
   margin: 0;
   font-size: .95rem;

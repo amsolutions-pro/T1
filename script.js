@@ -10,8 +10,13 @@
    ========================================================= */
 
 // -------- Constantes --------
-const APP_VERSION      = 'v0.5';
+const APP_VERSION      = 'v0.6';
 const NAMES_KEY        = 'memoireTrio.names';
+const PLAYER_COUNT_KEY = 'memoireTrio.playerCount';
+
+const MIN_PLAYERS      = 2;
+const MAX_PLAYERS      = 5;
+const DEFAULT_PLAYERS  = 3;
 
 const TILE_COUNT       = 6;
 const START_LENGTH     = 3;
@@ -42,9 +47,8 @@ function showScreen(name) {
 // -------- DOM --------
 const el = {
   // setup
-  name1: document.getElementById('name1'),
-  name2: document.getElementById('name2'),
-  name3: document.getElementById('name3'),
+  namesList: document.getElementById('namesList'),
+  addPlayerBtn: document.getElementById('addPlayerBtn'),
   soundToggle: document.getElementById('soundToggle'),
   startBtn: document.getElementById('startBtn'),
   // pass
@@ -83,6 +87,7 @@ const el = {
 let state = null;       // état de la partie en cours
 let timerInterval = null;
 let soundEnabled = true;
+let playerCount = DEFAULT_PLAYERS;
 
 function newGame(names) {
   state = {
@@ -378,9 +383,9 @@ function handleFail() {
 function advanceTurn() {
   if (state.ended) return;
 
-  // Fin si tout le monde est éliminé ou si un seul survivant après au moins un tour joué
+  // La partie continue tant qu'au moins un joueur a des vies.
+  // Le dernier en vie joue seul jusqu'à perdre ses dernières vies.
   if (aliveCount() === 0) return endGame();
-  if (aliveCount() === 1 && state.players.every(p => p.turnsPlayed > 0)) return endGame();
 
   // Passer au prochain joueur en vie
   let next = state.currentIdx;
@@ -501,12 +506,7 @@ function endGame(reason) {
 
 // -------- Handlers --------
 function onStartClick() {
-  const typed = [
-    el.name1.value.trim().slice(0, 12),
-    el.name2.value.trim().slice(0, 12),
-    el.name3.value.trim().slice(0, 12),
-  ];
-  // On mémorise ce que le joueur a réellement tapé (vide = on garde le placeholder au prochain rafraîchissement)
+  const typed = currentTypedNames();
   saveNames(typed);
   const names = typed.map((n, i) => n || `Joueur ${i + 1}`);
   soundEnabled = el.soundToggle.checked;
@@ -516,20 +516,86 @@ function onStartClick() {
   beginGame();
 }
 
+function currentTypedNames() {
+  return Array.from(el.namesList.querySelectorAll('input'))
+    .map(inp => inp.value.trim().slice(0, 12));
+}
+
 function saveNames(names) {
   try { localStorage.setItem(NAMES_KEY, JSON.stringify(names)); } catch {}
 }
 
-function restoreNames() {
+function getStoredNames() {
   try {
     const saved = JSON.parse(localStorage.getItem(NAMES_KEY) || 'null');
-    if (!Array.isArray(saved)) return;
-    // N'écrase pas les valeurs par défaut "Joueur N" : on ne met que si saisi
-    const inputs = [el.name1, el.name2, el.name3];
-    inputs.forEach((inp, i) => {
-      if (typeof saved[i] === 'string' && saved[i]) inp.value = saved[i];
-    });
-  } catch {}
+    return Array.isArray(saved) ? saved : [];
+  } catch { return []; }
+}
+
+function loadPlayerCount() {
+  const saved = parseInt(localStorage.getItem(PLAYER_COUNT_KEY), 10);
+  if (Number.isFinite(saved) && saved >= MIN_PLAYERS && saved <= MAX_PLAYERS) {
+    playerCount = saved;
+  }
+}
+
+function savePlayerCount() {
+  try { localStorage.setItem(PLAYER_COUNT_KEY, String(playerCount)); } catch {}
+}
+
+function renderNames() {
+  const stored = getStoredNames();
+  el.namesList.innerHTML = '';
+  for (let i = 0; i < playerCount; i++) {
+    const label = document.createElement('label');
+
+    const span = document.createElement('span');
+    span.textContent = `Joueur ${i + 1}`;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.maxLength = 12;
+    input.placeholder = `Joueur ${i + 1}`;
+    input.autocomplete = 'off';
+    if (typeof stored[i] === 'string' && stored[i]) input.value = stored[i];
+    input.addEventListener('input', () => saveNames(currentTypedNames()));
+
+    label.appendChild(span);
+    label.appendChild(input);
+
+    if (playerCount > MIN_PLAYERS) {
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'remove-btn';
+      remove.textContent = '×';
+      remove.setAttribute('aria-label', 'Retirer ce joueur');
+      remove.addEventListener('click', () => removePlayer(i));
+      label.appendChild(remove);
+    }
+
+    el.namesList.appendChild(label);
+  }
+
+  el.addPlayerBtn.hidden = playerCount >= MAX_PLAYERS;
+}
+
+function addPlayer() {
+  if (playerCount >= MAX_PLAYERS) return;
+  // On sauvegarde l'état courant des inputs avant de re-rendre (sinon on perd la saisie non commitée)
+  saveNames(currentTypedNames());
+  playerCount++;
+  savePlayerCount();
+  renderNames();
+}
+
+function removePlayer(idx) {
+  if (playerCount <= MIN_PLAYERS) return;
+  const typed = currentTypedNames();
+  typed.splice(idx, 1);
+  saveNames(typed);
+  playerCount--;
+  savePlayerCount();
+  renderNames();
 }
 
 function bindEvents() {
@@ -563,17 +629,7 @@ function bindEvents() {
     t.addEventListener('pointerdown', handler);
   });
 
-  // Sauvegarde des noms à la volée pendant la saisie
-  [el.name1, el.name2, el.name3].forEach(inp => {
-    inp.addEventListener('input', () => {
-      const typed = [
-        el.name1.value.trim().slice(0, 12),
-        el.name2.value.trim().slice(0, 12),
-        el.name3.value.trim().slice(0, 12),
-      ];
-      saveNames(typed);
-    });
-  });
+  el.addPlayerBtn.addEventListener('click', addPlayer);
 
   // iOS/Safari : remettre l'audio en route au retour au premier plan
   document.addEventListener('visibilitychange', () => {
@@ -584,7 +640,8 @@ function bindEvents() {
 }
 
 bindEvents();
-restoreNames();
+loadPlayerCount();
+renderNames();
 el.versionTag.textContent = APP_VERSION;
 el.reloadLink.addEventListener('click', (e) => {
   e.preventDefault();

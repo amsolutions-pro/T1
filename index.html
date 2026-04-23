@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="style.css?v=0.5" />
+  <link rel="stylesheet" href="style.css?v=0.6" />
 </head>
 <body>
 
@@ -18,7 +18,7 @@
   <section class="screen screen-setup active" id="screenSetup">
     <div class="setup-inner">
       <h1 class="title">Mémoire <span class="title-accent">Trio</span></h1>
-      <p class="tagline">Un jeu à 3 pour tuer le temps dans la file — jusqu'à 15 minutes.</p>
+      <p class="tagline">Un jeu de mémoire à passer entre 2 et 5 — idéal pour une file d'attente de 15 minutes.</p>
 
       <div class="rules">
         <h2>Règles express</h2>
@@ -28,24 +28,12 @@
           <li>À chaque tour la séquence s'allonge d'une case.</li>
           <li>3 vies par joueur. Une erreur = une vie en moins.</li>
           <li>Joker : la 1ʳᵉ erreur de chaque tour est pardonnée, tu peux retaper la case.</li>
-          <li>Dernier joueur en vie = gagnant. Passez-vous le téléphone !</li>
+          <li>On joue jusqu'à ce que tout le monde soit éliminé. Meilleure séquence = vainqueur.</li>
         </ol>
       </div>
 
-      <div class="names">
-        <label>
-          <span>Joueur 1</span>
-          <input type="text" id="name1" maxlength="12" placeholder="Joueur 1" autocomplete="off" />
-        </label>
-        <label>
-          <span>Joueur 2</span>
-          <input type="text" id="name2" maxlength="12" placeholder="Joueur 2" autocomplete="off" />
-        </label>
-        <label>
-          <span>Joueur 3</span>
-          <input type="text" id="name3" maxlength="12" placeholder="Joueur 3" autocomplete="off" />
-        </label>
-      </div>
+      <div class="names" id="namesList"></div>
+      <button class="btn btn-add" id="addPlayerBtn" type="button">+ Ajouter un joueur</button>
 
       <label class="option-row">
         <input type="checkbox" id="soundToggle" checked />
@@ -131,6 +119,6 @@
     </div>
   </section>
 
-  <script src="script.js?v=0.5"></script>
+  <script src="script.js?v=0.6"></script>
 </body>
 </html>

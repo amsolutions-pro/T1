@@ -162,6 +162,7 @@ body {
 }
 .names input {
   flex: 1;
+  min-width: 0;
   background: transparent;
   border: none;
   outline: none;
@@ -170,6 +171,34 @@ body {
   font-size: 1rem;
   font-family: inherit;
 }
+
+.remove-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1.3rem;
+  line-height: 1;
+  padding: 6px 4px 6px 10px;
+  cursor: pointer;
+  opacity: .55;
+  flex-shrink: 0;
+}
+.remove-btn:active { opacity: 1; transform: scale(.92); }
+
+.btn-add {
+  background: rgba(255,255,255,.04);
+  border: 1px dashed rgba(255,255,255,.18);
+  color: var(--text-dim);
+  padding: 12px;
+  border-radius: var(--radius);
+  font-weight: 500;
+  font-size: .92rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .2s ease, color .2s ease;
+}
+.btn-add:active { background: rgba(255,255,255,.08); color: var(--text); }
+.btn-add[hidden] { display: none; }
 
 .option-row {
   display: flex;

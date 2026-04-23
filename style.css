@@ -39,7 +39,43 @@ body {
   min-height: 100%;
   user-select: none;
   -webkit-user-select: none;
+  position: relative;
 }
+
+/* Cartes décoratives flottantes en arrière-plan */
+.bg-cards {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+.bg-card {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--s, 120px);
+  aspect-ratio: 5 / 7;
+  border-radius: 14px;
+  border: 2px solid var(--c);
+  background:
+    radial-gradient(60% 80% at 50% 50%, rgba(255,255,255,.04), transparent 70%);
+  opacity: .12;
+  transform: rotate(var(--r));
+  box-shadow: 0 0 40px var(--c), inset 0 0 30px rgba(255,255,255,.04);
+  filter: blur(.4px);
+}
+.bg-card::before {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border-radius: 7px;
+  border: 1.5px solid var(--c);
+  opacity: .55;
+}
+
+/* Le contenu principal passe au-dessus du décor */
+.screen { position: relative; z-index: 1; }
 
 /* =========================================================
    Écrans — un seul affiché à la fois
@@ -183,9 +219,15 @@ body {
   font-weight: 700;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: flex-start;
+  gap: 10px;
   user-select: none;
+}
+.rules-icon {
+  font-size: 1rem;
+}
+.rules > summary::after {
+  margin-left: auto;
 }
 .rules > summary::-webkit-details-marker { display: none; }
 .rules > summary::after {

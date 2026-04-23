@@ -10,9 +10,19 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="style.css?v=0.8" />
+  <link rel="stylesheet" href="style.css?v=0.9" />
 </head>
 <body>
+
+  <!-- Cartes floues en arrière-plan (décor, non interactives) -->
+  <div class="bg-cards" aria-hidden="true">
+    <span class="bg-card" style="--x:-6%;--y:4%;--r:-22deg;--c:#a855f7;--s:130px"></span>
+    <span class="bg-card" style="--x:68%;--y:-3%;--r:18deg;--c:#22d3ee;--s:150px"></span>
+    <span class="bg-card" style="--x:82%;--y:42%;--r:-14deg;--c:#f97316;--s:110px"></span>
+    <span class="bg-card" style="--x:-8%;--y:58%;--r:12deg;--c:#eab308;--s:140px"></span>
+    <span class="bg-card" style="--x:55%;--y:78%;--r:-26deg;--c:#ef4444;--s:120px"></span>
+    <span class="bg-card" style="--x:12%;--y:90%;--r:20deg;--c:#3b82f6;--s:100px"></span>
+  </div>
 
   <!-- ===== Écran 1 : accueil / configuration ===== -->
   <section class="screen screen-setup active" id="screenSetup">
@@ -26,10 +36,10 @@
         <span style="--c:#f97316"></span>
       </div>
       <h1 class="title">Mémoire <span class="title-accent">Trio</span></h1>
-      <p class="tagline">Un jeu de mémoire pour 2 à 5 · 15 min max.</p>
+      <p class="tagline">Réunissez 2 à 5 joueurs pour un moment complice. Parfait pour une attente de 15 min.</p>
 
       <details class="rules">
-        <summary>Règles du jeu</summary>
+        <summary><span class="rules-icon" aria-hidden="true">📖</span> Règles du jeu</summary>
         <ol>
           <li>Regardez bien la séquence de couleurs qui clignote.</li>
           <li>Reproduisez-la dans le même ordre en tapant les tuiles.</li>
@@ -127,6 +137,6 @@
     </div>
   </section>
 
-  <script src="script.js?v=0.8"></script>
+  <script src="script.js?v=0.9"></script>
 </body>
 </html>

@@ -10,7 +10,7 @@
    ========================================================= */
 
 // -------- Constantes --------
-const APP_VERSION      = 'v0.8';
+const APP_VERSION      = 'v0.9';
 const NAMES_KEY        = 'memoireTrio.names';
 const PLAYER_COUNT_KEY = 'memoireTrio.playerCount';
 
@@ -30,8 +30,8 @@ const FEEDBACK_MS      = 1200;  // durée de l'écran feedback avant pass
 // Notes (Hz) — gamme pentatonique majeure, toutes les combinaisons sonnent bien
 const TILE_FREQS = [261.63, 329.63, 392.00, 440.00, 523.25, 659.25];
 
-// Palette des avatars (aligne avec les couleurs des tuiles)
-const AVATAR_COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#f97316'];
+// Palette des avatars — l'ordre détermine la couleur du joueur 1, 2, 3, …
+const AVATAR_COLORS = ['#ef4444', '#3b82f6', '#f97316', '#eab308', '#a855f7', '#22c55e'];
 
 // -------- Écrans --------
 const screens = {

@@ -10,6 +10,9 @@
    ========================================================= */
 
 // -------- Constantes --------
+const APP_VERSION      = 'v0.3';
+const NAMES_KEY        = 'memoireTrio.names';
+
 const TILE_COUNT       = 6;
 const START_LENGTH     = 3;
 const MAX_LENGTH       = 25;
@@ -72,6 +75,7 @@ const el = {
   ranking: document.getElementById('ranking'),
   replayBtn: document.getElementById('replayBtn'),
   homeBtn: document.getElementById('homeBtn'),
+  versionTag: document.getElementById('versionTag'),
 };
 
 // -------- État --------
@@ -496,16 +500,35 @@ function endGame(reason) {
 
 // -------- Handlers --------
 function onStartClick() {
-  const names = [
-    (el.name1.value || 'Joueur 1').trim().slice(0, 12),
-    (el.name2.value || 'Joueur 2').trim().slice(0, 12),
-    (el.name3.value || 'Joueur 3').trim().slice(0, 12),
+  const typed = [
+    el.name1.value.trim().slice(0, 12),
+    el.name2.value.trim().slice(0, 12),
+    el.name3.value.trim().slice(0, 12),
   ];
+  // On mémorise ce que le joueur a réellement tapé (vide = on garde le placeholder au prochain rafraîchissement)
+  saveNames(typed);
+  const names = typed.map((n, i) => n || `Joueur ${i + 1}`);
   soundEnabled = el.soundToggle.checked;
   // Tente d'initialiser l'audio via l'interaction utilisateur (iOS)
   ensureAudio();
   newGame(names);
   beginGame();
+}
+
+function saveNames(names) {
+  try { localStorage.setItem(NAMES_KEY, JSON.stringify(names)); } catch {}
+}
+
+function restoreNames() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(NAMES_KEY) || 'null');
+    if (!Array.isArray(saved)) return;
+    // N'écrase pas les valeurs par défaut "Joueur N" : on ne met que si saisi
+    const inputs = [el.name1, el.name2, el.name3];
+    inputs.forEach((inp, i) => {
+      if (typeof saved[i] === 'string' && saved[i]) inp.value = saved[i];
+    });
+  } catch {}
 }
 
 function bindEvents() {
@@ -548,3 +571,5 @@ function bindEvents() {
 }
 
 bindEvents();
+restoreNames();
+el.versionTag.textContent = APP_VERSION;

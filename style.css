@@ -185,6 +185,15 @@ body {
   accent-color: var(--accent);
 }
 
+.version-tag {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: .72rem;
+  opacity: .55;
+  margin: 8px 0 0;
+  letter-spacing: .05em;
+}
+
 /* =========================================================
    Écran 2 : "passe le téléphone"
    ========================================================= */

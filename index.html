@@ -10,7 +10,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="style.css?v=0.6" />
+  <link rel="stylesheet" href="style.css?v=0.7" />
 </head>
 <body>
 
@@ -20,8 +20,8 @@
       <h1 class="title">Mémoire <span class="title-accent">Trio</span></h1>
       <p class="tagline">Un jeu de mémoire à passer entre 2 et 5 — idéal pour une file d'attente de 15 minutes.</p>
 
-      <div class="rules">
-        <h2>Règles express</h2>
+      <details class="rules">
+        <summary>Règles du jeu</summary>
         <ol>
           <li>Regardez bien la séquence de couleurs qui clignote.</li>
           <li>Reproduisez-la dans le même ordre en tapant les tuiles.</li>
@@ -30,7 +30,7 @@
           <li>Joker : la 1ʳᵉ erreur de chaque tour est pardonnée, tu peux retaper la case.</li>
           <li>On joue jusqu'à ce que tout le monde soit éliminé. Meilleure séquence = vainqueur.</li>
         </ol>
-      </div>
+      </details>
 
       <div class="names" id="namesList"></div>
       <button class="btn btn-add" id="addPlayerBtn" type="button">+ Ajouter un joueur</button>
@@ -119,6 +119,6 @@
     </div>
   </section>
 
-  <script src="script.js?v=0.6"></script>
+  <script src="script.js?v=0.7"></script>
 </body>
 </html>

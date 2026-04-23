@@ -10,7 +10,7 @@
    ========================================================= */
 
 // -------- Constantes --------
-const APP_VERSION      = 'v0.6';
+const APP_VERSION      = 'v0.7';
 const NAMES_KEY        = 'memoireTrio.names';
 const PLAYER_COUNT_KEY = 'memoireTrio.playerCount';
 

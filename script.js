@@ -10,7 +10,7 @@
    ========================================================= */
 
 // -------- Constantes --------
-const APP_VERSION      = 'v0.7';
+const APP_VERSION      = 'v0.8';
 const NAMES_KEY        = 'memoireTrio.names';
 const PLAYER_COUNT_KEY = 'memoireTrio.playerCount';
 
@@ -29,6 +29,9 @@ const FEEDBACK_MS      = 1200;  // durée de l'écran feedback avant pass
 
 // Notes (Hz) — gamme pentatonique majeure, toutes les combinaisons sonnent bien
 const TILE_FREQS = [261.63, 329.63, 392.00, 440.00, 523.25, 659.25];
+
+// Palette des avatars (aligne avec les couleurs des tuiles)
+const AVATAR_COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#f97316'];
 
 // -------- Écrans --------
 const screens = {
@@ -494,7 +497,8 @@ function endGame(reason) {
     name.textContent = p.name;
     const score = document.createElement('span');
     score.className = 'rank-score';
-    score.textContent = `${p.bestLength} · ${hearts(p.lives)}`;
+    const livesDisplay = p.lives > 0 ? hearts(p.lives) : '💀';
+    score.textContent = `${p.bestLength} · ${livesDisplay}`;
     li.appendChild(pos);
     li.appendChild(name);
     li.appendChild(score);
@@ -549,8 +553,9 @@ function renderNames() {
   for (let i = 0; i < playerCount; i++) {
     const label = document.createElement('label');
 
-    const span = document.createElement('span');
-    span.textContent = `Joueur ${i + 1}`;
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.style.setProperty('--avatar-color', AVATAR_COLORS[i % AVATAR_COLORS.length]);
 
     const input = document.createElement('input');
     input.type = 'text';
@@ -558,9 +563,19 @@ function renderNames() {
     input.placeholder = `Joueur ${i + 1}`;
     input.autocomplete = 'off';
     if (typeof stored[i] === 'string' && stored[i]) input.value = stored[i];
-    input.addEventListener('input', () => saveNames(currentTypedNames()));
 
-    label.appendChild(span);
+    const updateAvatar = () => {
+      const val = input.value.trim();
+      avatar.textContent = val ? val.charAt(0).toUpperCase() : String(i + 1);
+    };
+    updateAvatar();
+
+    input.addEventListener('input', () => {
+      saveNames(currentTypedNames());
+      updateAvatar();
+    });
+
+    label.appendChild(avatar);
     label.appendChild(input);
 
     if (playerCount > MIN_PLAYERS) {

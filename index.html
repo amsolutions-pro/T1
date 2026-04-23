@@ -10,15 +10,23 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="style.css?v=0.7" />
+  <link rel="stylesheet" href="style.css?v=0.8" />
 </head>
 <body>
 
   <!-- ===== Écran 1 : accueil / configuration ===== -->
   <section class="screen screen-setup active" id="screenSetup">
     <div class="setup-inner">
+      <div class="title-deco" aria-hidden="true">
+        <span style="--c:#ef4444"></span>
+        <span style="--c:#3b82f6"></span>
+        <span style="--c:#22c55e"></span>
+        <span style="--c:#eab308"></span>
+        <span style="--c:#a855f7"></span>
+        <span style="--c:#f97316"></span>
+      </div>
       <h1 class="title">Mémoire <span class="title-accent">Trio</span></h1>
-      <p class="tagline">Un jeu de mémoire à passer entre 2 et 5 — idéal pour une file d'attente de 15 minutes.</p>
+      <p class="tagline">Un jeu de mémoire pour 2 à 5 · 15 min max.</p>
 
       <details class="rules">
         <summary>Règles du jeu</summary>
@@ -40,7 +48,7 @@
         <span>Sons activés</span>
       </label>
 
-      <button class="btn btn-primary btn-xl" id="startBtn">C'est parti</button>
+      <button class="btn btn-primary btn-xl" id="startBtn"><span class="btn-icon">▶</span> C'est parti</button>
 
       <p class="version-tag">
         <span id="versionTag"></span>
@@ -119,6 +127,6 @@
     </div>
   </section>
 
-  <script src="script.js?v=0.7"></script>
+  <script src="script.js?v=0.8"></script>
 </body>
 </html>

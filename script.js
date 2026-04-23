@@ -1,393 +1,507 @@
-// =========================================================
-// Compteur de jeûne — logique principale
-// =========================================================
+/* =========================================================
+   Mémoire Trio — logique du jeu
+   =========================================================
 
-const STORAGE_KEY = 'fastingTimerState';
-const THEME_KEY = 'fastingTimerTheme';
-const MAX_HISTORY = 10;
+   Pass-and-play à 3. Chaque tour : une séquence de tuiles
+   colorées clignote, le joueur doit la reproduire.
+   La séquence grandit d'une case à chaque tour réussi.
+   3 vies par joueur. Dernier en vie = vainqueur.
+   Chrono global de 15 min.
+   ========================================================= */
 
-// Définition des phases du jeûne
-const PHASES = [
-  {
-    name: 'Digestion',
-    min: 0,
-    max: 4,
-    color: '#3b82f6',
-    desc: 'Ton corps digère le dernier repas et utilise le glucose.',
-  },
-  {
-    name: 'Autophagie légère',
-    min: 4,
-    max: 16,
-    color: '#06b6d4',
-    desc: 'Les réserves de glycogène se vident, l\'autophagie démarre.',
-  },
-  {
-    name: 'Autophagie accrue',
-    min: 16,
-    max: 24,
-    color: '#10b981',
-    desc: 'Le recyclage cellulaire s\'intensifie, brûlage des graisses activé.',
-  },
-  {
-    name: 'Cétose',
-    min: 24,
-    max: 48,
-    color: '#f59e0b',
-    desc: 'Le corps produit des cétones comme carburant principal.',
-  },
-  {
-    name: 'Jeûne prolongé',
-    min: 48,
-    max: Infinity,
-    color: '#ef4444',
-    desc: 'Jeûne avancé — un suivi médical est vivement recommandé.',
-  },
-];
+// -------- Constantes --------
+const TILE_COUNT       = 6;
+const START_LENGTH     = 3;
+const MAX_LENGTH       = 25;
+const LIVES            = 3;
+const TIME_LIMIT_MS    = 15 * 60 * 1000;
+const WATCH_INTER_MS   = 420;   // pause entre 2 flashs
+const WATCH_FLASH_MS   = 480;   // durée d'un flash
+const FEEDBACK_MS      = 1200;  // durée de l'écran feedback avant pass
 
-// =========================================================
-// État
-// =========================================================
-let state = {
-  startTime: null,   // timestamp ms, ou null si pas de jeûne en cours
-  history: [],       // [{ start, end, duration }]
+// Notes (Hz) — gamme pentatonique majeure, toutes les combinaisons sonnent bien
+const TILE_FREQS = [261.63, 329.63, 392.00, 440.00, 523.25, 659.25];
+
+// -------- Écrans --------
+const screens = {
+  setup:  document.getElementById('screenSetup'),
+  pass:   document.getElementById('screenPass'),
+  game:   document.getElementById('screenGame'),
+  paused: document.getElementById('screenPaused'),
+  end:    document.getElementById('screenEnd'),
 };
 
-let tickInterval = null;
+function showScreen(name) {
+  Object.values(screens).forEach(s => s.classList.remove('active'));
+  screens[name].classList.add('active');
+}
 
-// =========================================================
-// DOM
-// =========================================================
+// -------- DOM --------
 const el = {
-  timerLabel: document.getElementById('timerLabel'),
-  timerDisplay: document.getElementById('timerDisplay'),
-  timerStart: document.getElementById('timerStart'),
-  phaseName: document.getElementById('phaseName'),
-  phaseRange: document.getElementById('phaseRange'),
-  phaseDesc: document.getElementById('phaseDesc'),
-  progressFill: document.getElementById('progressFill'),
+  // setup
+  name1: document.getElementById('name1'),
+  name2: document.getElementById('name2'),
+  name3: document.getElementById('name3'),
+  soundToggle: document.getElementById('soundToggle'),
   startBtn: document.getElementById('startBtn'),
-  stopBtn: document.getElementById('stopBtn'),
-  phasesList: document.getElementById('phasesList'),
-  historyList: document.getElementById('historyList'),
-  clearHistoryBtn: document.getElementById('clearHistoryBtn'),
-  themeToggle: document.getElementById('themeToggle'),
-  themeIcon: document.getElementById('themeIcon'),
+  // pass
+  passName: document.getElementById('passName'),
+  passLives: document.getElementById('passLives'),
+  passRound: document.getElementById('passRound'),
+  passLen: document.getElementById('passLen'),
+  passScores: document.getElementById('passScores'),
+  readyBtn: document.getElementById('readyBtn'),
+  // game
+  hudPlayer: document.getElementById('hudPlayer'),
+  hudLives: document.getElementById('hudLives'),
+  hudStatus: document.getElementById('hudStatus'),
+  hudTimer: document.getElementById('hudTimer'),
+  pauseBtn: document.getElementById('pauseBtn'),
+  progressInner: document.getElementById('progressInner'),
+  progressLabel: document.getElementById('progressLabel'),
+  board: document.getElementById('board'),
+  tiles: Array.from(document.querySelectorAll('.tile')),
+  feedback: document.getElementById('feedback'),
+  // paused
+  resumeBtn: document.getElementById('resumeBtn'),
+  quitBtn: document.getElementById('quitBtn'),
+  // end
+  endTitle: document.getElementById('endTitle'),
+  endSub: document.getElementById('endSub'),
+  ranking: document.getElementById('ranking'),
+  replayBtn: document.getElementById('replayBtn'),
+  homeBtn: document.getElementById('homeBtn'),
 };
 
-// =========================================================
-// Persistance
-// =========================================================
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      state = {
-        startTime: parsed.startTime ?? null,
-        history: Array.isArray(parsed.history) ? parsed.history : [],
-      };
+// -------- État --------
+let state = null;       // état de la partie en cours
+let timerInterval = null;
+let soundEnabled = true;
+
+function newGame(names) {
+  state = {
+    players: names.map(n => ({
+      name: n,
+      lives: LIVES,
+      bestLength: 0,
+      turnsPlayed: 0,
+    })),
+    currentIdx: 0,
+    nextLength: START_LENGTH,
+    round: 1,
+    sequence: [],
+    inputIdx: 0,
+    phase: 'pass',
+    startMs: Date.now(),
+    pausedElapsed: 0,
+    paused: false,
+    ended: false,
+    watchToken: 0,
+  };
+}
+
+// -------- Audio (Web Audio API) --------
+let audioCtx = null;
+function ensureAudio() {
+  if (!soundEnabled) return null;
+  if (!audioCtx) {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+    audioCtx = new Ctx();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function playTone(freq, durMs = 300) {
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  const now = ctx.currentTime;
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.25, now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + durMs / 1000);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + durMs / 1000 + 0.05);
+}
+
+function playError() {
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(220, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.4);
+  gain.gain.setValueAtTime(0.2, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.45);
+}
+
+function playSuccess() {
+  [523.25, 659.25, 783.99].forEach((f, i) => {
+    setTimeout(() => playTone(f, 180), i * 90);
+  });
+}
+
+function vibrate(pattern) {
+  if (navigator.vibrate) navigator.vibrate(pattern);
+}
+
+// -------- Helpers --------
+function hearts(n) {
+  return '❤'.repeat(Math.max(0, n)) + '♡'.repeat(Math.max(0, LIVES - n));
+}
+
+function formatTime(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(s / 60);
+  const ss = s % 60;
+  return `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+}
+
+function aliveCount() {
+  return state.players.filter(p => p.lives > 0).length;
+}
+
+function sequenceFor(length) {
+  const seq = [];
+  let prev = -1;
+  for (let i = 0; i < length; i++) {
+    let pick;
+    // éviter de répéter immédiatement la même tuile (plus lisible)
+    do { pick = Math.floor(Math.random() * TILE_COUNT); } while (pick === prev);
+    seq.push(pick);
+    prev = pick;
+  }
+  return seq;
+}
+
+// -------- Flux de jeu --------
+function beginGame() {
+  // Préparer le premier tour
+  state.phase = 'pass';
+  renderPassScreen();
+  showScreen('pass');
+  startTimer();
+}
+
+function renderPassScreen() {
+  const p = state.players[state.currentIdx];
+  el.passName.textContent = p.name;
+  el.passLives.textContent = hearts(p.lives);
+  el.passRound.textContent = state.round;
+  el.passLen.textContent = state.nextLength;
+
+  const scoreLines = state.players
+    .map(pl => `${pl.name} · ${hearts(pl.lives)} · meilleur : ${pl.bestLength}`)
+    .join('\n');
+  el.passScores.textContent = scoreLines;
+}
+
+function startTurn() {
+  state.sequence = sequenceFor(state.nextLength);
+  state.inputIdx = 0;
+  state.phase = 'watch';
+  showScreen('game');
+  updateHUD();
+  el.feedback.textContent = '';
+  el.feedback.className = 'feedback';
+  el.board.classList.remove('is-input');
+  el.board.classList.add('is-locked');
+  el.hudStatus.textContent = 'Regarde bien…';
+  el.hudStatus.className = 'hud-status is-watch';
+  playSequence();
+}
+
+function playSequence() {
+  let i = 0;
+  // jeton capturé pour invalider les timeouts en retard après un pause/quit
+  const token = ++state.watchToken;
+  const step = () => {
+    if (state.paused || state.ended) return;
+    if (state.watchToken !== token) return;
+    if (state.phase !== 'watch') return;
+    if (i >= state.sequence.length) {
+      enterInputPhase();
+      return;
     }
-  } catch (e) {
-    console.warn('État corrompu, réinitialisation.', e);
-    state = { startTime: null, history: [] };
-  }
+    flashTile(state.sequence[i]);
+    i++;
+    setTimeout(step, WATCH_FLASH_MS + WATCH_INTER_MS);
+  };
+  setTimeout(step, 500);
 }
 
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+function flashTile(idx) {
+  const tile = el.tiles[idx];
+  tile.classList.add('is-lit');
+  playTone(TILE_FREQS[idx], 320);
+  setTimeout(() => tile.classList.remove('is-lit'), WATCH_FLASH_MS);
 }
 
-// =========================================================
-// Thème
-// =========================================================
-function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  el.themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
-  el.themeToggle.setAttribute(
-    'aria-label',
-    theme === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'
-  );
+function enterInputPhase() {
+  state.phase = 'input';
+  el.hudStatus.textContent = 'À toi de jouer';
+  el.hudStatus.className = 'hud-status is-play';
+  el.board.classList.remove('is-locked');
+  el.board.classList.add('is-input');
+  updateProgress();
 }
 
-function loadTheme() {
-  const saved = localStorage.getItem(THEME_KEY);
-  if (saved === 'dark' || saved === 'light') {
-    applyTheme(saved);
-  } else {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    applyTheme(prefersDark ? 'dark' : 'light');
-  }
-}
+function onTileTap(idx) {
+  if (state.phase !== 'input' || state.paused) return;
 
-function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme') || 'light';
-  const next = current === 'dark' ? 'light' : 'dark';
-  applyTheme(next);
-  localStorage.setItem(THEME_KEY, next);
-}
+  // Flash visuel + son pour chaque tap
+  const tile = el.tiles[idx];
+  tile.classList.add('is-lit');
+  playTone(TILE_FREQS[idx], 220);
+  vibrate(30);
+  setTimeout(() => tile.classList.remove('is-lit'), 180);
 
-// =========================================================
-// Utilitaires temps
-// =========================================================
-function formatDuration(ms) {
-  const totalSec = Math.max(0, Math.floor(ms / 1000));
-  const h = Math.floor(totalSec / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
-  return (
-    String(h).padStart(2, '0') + ':' +
-    String(m).padStart(2, '0') + ':' +
-    String(s).padStart(2, '0')
-  );
-}
-
-function formatDurationHuman(ms) {
-  const totalMin = Math.floor(ms / 60000);
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
-  if (h === 0) return `${m} min`;
-  return `${h}h ${String(m).padStart(2, '0')}min`;
-}
-
-function formatDateTime(ts) {
-  const d = new Date(ts);
-  return d.toLocaleString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function formatTime(ts) {
-  const d = new Date(ts);
-  return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-}
-
-function formatDate(ts) {
-  const d = new Date(ts);
-  return d.toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
-
-// =========================================================
-// Phases
-// =========================================================
-function getPhase(hours) {
-  return PHASES.find(p => hours >= p.min && hours < p.max) || PHASES[0];
-}
-
-function getPhaseProgress(hours, phase) {
-  if (phase.max === Infinity) return 1;
-  const span = phase.max - phase.min;
-  return Math.min(1, Math.max(0, (hours - phase.min) / span));
-}
-
-function renderPhasesList(activePhase) {
-  el.phasesList.innerHTML = '';
-  PHASES.forEach(p => {
-    const li = document.createElement('li');
-    if (activePhase && p.name === activePhase.name) li.classList.add('active');
-
-    const dot = document.createElement('span');
-    dot.className = 'phase-dot';
-    dot.style.backgroundColor = p.color;
-
-    const info = document.createElement('div');
-    info.className = 'phase-info';
-
-    const name = document.createElement('span');
-    name.className = 'phase-info-name';
-    name.textContent = p.name;
-
-    const range = document.createElement('span');
-    range.className = 'phase-info-range';
-    range.textContent = p.max === Infinity ? `${p.min}h et plus` : `${p.min}h – ${p.max}h`;
-
-    info.appendChild(name);
-    info.appendChild(range);
-    li.appendChild(dot);
-    li.appendChild(info);
-    el.phasesList.appendChild(li);
-  });
-}
-
-// =========================================================
-// Affichage
-// =========================================================
-function updateTimerDisplay() {
-  if (state.startTime) {
-    const elapsed = Date.now() - state.startTime;
-    const hours = elapsed / 3600000;
-    const phase = getPhase(hours);
-
-    el.timerLabel.textContent = 'Jeûne en cours';
-    el.timerDisplay.textContent = formatDuration(elapsed);
-    el.timerStart.textContent = `Démarré le ${formatDateTime(state.startTime)}`;
-
-    el.phaseName.textContent = phase.name;
-    el.phaseRange.textContent = phase.max === Infinity
-      ? `${phase.min}h+`
-      : `${phase.min}h – ${phase.max}h`;
-    el.phaseDesc.textContent = phase.desc;
-
-    const progress = getPhaseProgress(hours, phase);
-    el.progressFill.style.width = `${progress * 100}%`;
-    el.progressFill.style.background = phase.color;
-
-    el.startBtn.classList.add('hidden');
-    el.stopBtn.classList.remove('hidden');
-
-    renderPhasesList(phase);
-  } else {
-    el.timerLabel.textContent = 'Aucun jeûne en cours';
-    el.timerDisplay.textContent = '00:00:00';
-    el.timerStart.textContent = '';
-
-    el.phaseName.textContent = '—';
-    el.phaseRange.textContent = '';
-    el.phaseDesc.textContent = 'Appuie sur « Commencer le jeûne » pour démarrer.';
-    el.progressFill.style.width = '0%';
-
-    el.startBtn.classList.remove('hidden');
-    el.stopBtn.classList.add('hidden');
-
-    renderPhasesList(null);
-  }
-}
-
-function renderHistory() {
-  el.historyList.innerHTML = '';
-
-  if (state.history.length === 0) {
-    const li = document.createElement('li');
-    li.className = 'empty-state';
-    li.textContent = "Aucun jeûne enregistré pour l'instant.";
-    el.historyList.appendChild(li);
-    el.clearHistoryBtn.classList.add('hidden');
+  const expected = state.sequence[state.inputIdx];
+  if (idx !== expected) {
+    handleFail();
     return;
   }
+  state.inputIdx++;
+  updateProgress();
+  if (state.inputIdx >= state.sequence.length) {
+    handleSuccess();
+  }
+}
 
-  el.clearHistoryBtn.classList.remove('hidden');
+function updateProgress() {
+  const total = state.sequence.length;
+  const done = state.inputIdx;
+  el.progressInner.style.width = `${(done / total) * 100}%`;
+  el.progressLabel.textContent = `${done} / ${total}`;
+}
 
-  // Affichage du plus récent au plus ancien
-  [...state.history].reverse().forEach(entry => {
+function handleSuccess() {
+  state.phase = 'feedback';
+  el.board.classList.remove('is-input');
+  el.board.classList.add('is-locked');
+
+  const p = state.players[state.currentIdx];
+  p.turnsPlayed++;
+  if (state.sequence.length > p.bestLength) p.bestLength = state.sequence.length;
+
+  el.feedback.textContent = `Bravo ! Séquence de ${state.sequence.length} réussie.`;
+  el.feedback.className = 'feedback ok';
+  el.hudStatus.textContent = 'Réussi';
+  el.hudStatus.className = 'hud-status is-ok';
+
+  playSuccess();
+  vibrate([0, 40, 40, 40]);
+
+  // la séquence grandit pour le prochain tour
+  if (state.nextLength < MAX_LENGTH) state.nextLength++;
+
+  setTimeout(advanceTurn, FEEDBACK_MS);
+}
+
+function handleFail() {
+  state.phase = 'feedback';
+  el.board.classList.remove('is-input');
+  el.board.classList.add('is-locked', 'shake');
+  setTimeout(() => el.board.classList.remove('shake'), 450);
+
+  const p = state.players[state.currentIdx];
+  p.lives--;
+  p.turnsPlayed++;
+
+  const correctIdx = state.sequence[state.inputIdx];
+  flashTile(correctIdx); // on montre brièvement la bonne tuile
+
+  el.feedback.textContent = p.lives > 0
+    ? `Raté ! Il te reste ${p.lives} vie${p.lives > 1 ? 's' : ''}.`
+    : `Éliminé·e ! Meilleur score : ${p.bestLength}.`;
+  el.feedback.className = 'feedback ko';
+  el.hudStatus.textContent = 'Raté';
+  el.hudStatus.className = 'hud-status is-ko';
+  updateHUD();
+
+  playError();
+  vibrate([0, 120, 80, 120]);
+
+  setTimeout(advanceTurn, FEEDBACK_MS + 300);
+}
+
+function advanceTurn() {
+  if (state.ended) return;
+
+  // Fin si tout le monde est éliminé ou si un seul survivant après au moins un tour joué
+  if (aliveCount() === 0) return endGame();
+  if (aliveCount() === 1 && state.players.every(p => p.turnsPlayed > 0)) return endGame();
+
+  // Passer au prochain joueur en vie
+  let next = state.currentIdx;
+  for (let i = 0; i < state.players.length; i++) {
+    next = (next + 1) % state.players.length;
+    if (state.players[next].lives > 0) break;
+  }
+  state.currentIdx = next;
+  state.round++;
+
+  renderPassScreen();
+  showScreen('pass');
+}
+
+// -------- HUD --------
+function updateHUD() {
+  const p = state.players[state.currentIdx];
+  el.hudPlayer.textContent = p.name;
+  el.hudLives.textContent = hearts(p.lives);
+}
+
+// -------- Timer global --------
+function elapsed() {
+  if (state.paused) return state.pausedElapsed;
+  return Date.now() - state.startMs;
+}
+
+function startTimer() {
+  stopTimer();
+  const tick = () => {
+    const remaining = TIME_LIMIT_MS - elapsed();
+    el.hudTimer.textContent = formatTime(remaining);
+    if (remaining <= 0 && !state.ended) endGame('timeout');
+  };
+  tick();
+  timerInterval = setInterval(tick, 500);
+}
+
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+// -------- Pause / reprise --------
+function pauseGame() {
+  if (state.ended || state.paused) return;
+  state.paused = true;
+  state.pausedElapsed = Date.now() - state.startMs;
+  showScreen('paused');
+}
+
+function resumeGame() {
+  if (!state.paused) return;
+  state.paused = false;
+  state.startMs = Date.now() - state.pausedElapsed;
+  // Si on était en plein affichage de séquence ou en input, on renvoie sur l'écran "passe"
+  // du joueur courant pour redémarrer proprement le tour.
+  if (state.phase === 'watch' || state.phase === 'input') {
+    renderPassScreen();
+    showScreen('pass');
+    state.phase = 'pass';
+  } else {
+    showScreen(state.phase === 'feedback' ? 'game' : 'pass');
+  }
+}
+
+// -------- Fin de partie --------
+function endGame(reason) {
+  state.ended = true;
+  stopTimer();
+
+  // Classement : meilleure séquence, puis vies restantes, puis tours joués (moins = mieux à score égal ? on garde + pour fairness)
+  const ranked = [...state.players].sort((a, b) => {
+    if (b.bestLength !== a.bestLength) return b.bestLength - a.bestLength;
+    if (b.lives !== a.lives) return b.lives - a.lives;
+    return a.turnsPlayed - b.turnsPlayed;
+  });
+
+  el.endTitle.textContent = reason === 'timeout'
+    ? 'Temps écoulé !'
+    : 'Fin de partie';
+
+  const winner = ranked[0];
+  const tiedWinners = ranked.filter(r => r.bestLength === winner.bestLength && r.lives === winner.lives);
+  if (tiedWinners.length > 1) {
+    el.endSub.textContent = `Égalité entre ${tiedWinners.map(w => w.name).join(' et ')} !`;
+  } else {
+    el.endSub.textContent = `🏆 ${winner.name} remporte la partie.`;
+  }
+
+  el.ranking.innerHTML = '';
+  ranked.forEach((p, i) => {
     const li = document.createElement('li');
-
-    const header = document.createElement('div');
-    header.className = 'history-item-header';
-
-    const date = document.createElement('span');
-    date.className = 'history-date';
-    date.textContent = formatDate(entry.start);
-
-    const duration = document.createElement('span');
-    duration.className = 'history-duration';
-    duration.textContent = formatDurationHuman(entry.duration);
-
-    header.appendChild(date);
-    header.appendChild(duration);
-
-    const times = document.createElement('div');
-    times.className = 'history-times';
-    times.textContent = `Début ${formatTime(entry.start)} → Fin ${formatTime(entry.end)}`;
-
-    li.appendChild(header);
-    li.appendChild(times);
-    el.historyList.appendChild(li);
+    if (i === 0) li.classList.add('first');
+    const pos = document.createElement('span');
+    pos.className = 'rank-pos';
+    pos.textContent = i === 0 ? '🏆' : `${i + 1}.`;
+    const name = document.createElement('span');
+    name.className = 'rank-name';
+    name.textContent = p.name;
+    const score = document.createElement('span');
+    score.className = 'rank-score';
+    score.textContent = `${p.bestLength} · ${hearts(p.lives)}`;
+    li.appendChild(pos);
+    li.appendChild(name);
+    li.appendChild(score);
+    el.ranking.appendChild(li);
   });
+
+  showScreen('end');
 }
 
-// =========================================================
-// Actions
-// =========================================================
-function startFast() {
-  state.startTime = Date.now();
-  saveState();
-  startTicking();
-  updateTimerDisplay();
+// -------- Handlers --------
+function onStartClick() {
+  const names = [
+    (el.name1.value || 'Joueur 1').trim().slice(0, 12),
+    (el.name2.value || 'Joueur 2').trim().slice(0, 12),
+    (el.name3.value || 'Joueur 3').trim().slice(0, 12),
+  ];
+  soundEnabled = el.soundToggle.checked;
+  // Tente d'initialiser l'audio via l'interaction utilisateur (iOS)
+  ensureAudio();
+  newGame(names);
+  beginGame();
 }
 
-function endFast() {
-  if (!state.startTime) return;
-
-  const end = Date.now();
-  const duration = end - state.startTime;
-
-  // Entrée uniquement si le jeûne a duré au moins 1 minute
-  if (duration >= 60000) {
-    state.history.push({
-      start: state.startTime,
-      end,
-      duration,
-    });
-    // Conserver uniquement les 10 derniers
-    if (state.history.length > MAX_HISTORY) {
-      state.history = state.history.slice(-MAX_HISTORY);
-    }
-  }
-
-  state.startTime = null;
-  saveState();
-  stopTicking();
-  updateTimerDisplay();
-  renderHistory();
-}
-
-function clearHistory() {
-  if (!confirm('Effacer tout l\'historique ? Cette action est irréversible.')) return;
-  state.history = [];
-  saveState();
-  renderHistory();
-}
-
-// =========================================================
-// Boucle de rafraîchissement
-// =========================================================
-function startTicking() {
-  if (tickInterval) return;
-  tickInterval = setInterval(updateTimerDisplay, 1000);
-}
-
-function stopTicking() {
-  if (tickInterval) {
-    clearInterval(tickInterval);
-    tickInterval = null;
-  }
-}
-
-// =========================================================
-// Initialisation
-// =========================================================
-function init() {
-  loadTheme();
-  loadState();
-
-  el.startBtn.addEventListener('click', startFast);
-  el.stopBtn.addEventListener('click', () => {
-    if (confirm('Arrêter le jeûne en cours ?')) endFast();
+function bindEvents() {
+  el.startBtn.addEventListener('click', onStartClick);
+  el.readyBtn.addEventListener('click', () => {
+    if (state && !state.ended) startTurn();
   });
-  el.clearHistoryBtn.addEventListener('click', clearHistory);
-  el.themeToggle.addEventListener('click', toggleTheme);
+  el.pauseBtn.addEventListener('click', pauseGame);
+  el.resumeBtn.addEventListener('click', resumeGame);
+  el.quitBtn.addEventListener('click', () => {
+    state.paused = false;
+    endGame('quit');
+  });
+  el.replayBtn.addEventListener('click', () => {
+    const names = state.players.map(p => p.name);
+    soundEnabled = el.soundToggle.checked;
+    newGame(names);
+    beginGame();
+  });
+  el.homeBtn.addEventListener('click', () => {
+    stopTimer();
+    showScreen('setup');
+  });
 
-  // Reprise du timer si un jeûne était en cours
-  if (state.startTime) startTicking();
+  el.tiles.forEach(t => {
+    const handler = (e) => {
+      e.preventDefault();
+      onTileTap(Number(t.dataset.i));
+    };
+    // Réactivité maximale : pointerdown plutôt que click
+    t.addEventListener('pointerdown', handler);
+  });
 
-  updateTimerDisplay();
-  renderHistory();
-
-  // Relance le timer quand l'app revient au premier plan (iOS met en pause les JS en arrière-plan)
+  // iOS/Safari : remettre l'audio en route au retour au premier plan
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && state.startTime) {
-      updateTimerDisplay();
-      startTicking();
+    if (!document.hidden && audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
     }
   });
 }
 
-init();
+bindEvents();

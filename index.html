@@ -2,74 +2,124 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Compteur de jeûne</title>
+  <title>Mémoire Trio — jeu de file d'attente</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="app-header">
-    <h1>Compteur de jeûne</h1>
-    <button id="themeToggle" class="icon-btn" aria-label="Basculer le mode sombre">
-      <span id="themeIcon">🌙</span>
-    </button>
-  </header>
 
-  <main class="app-main">
+  <!-- ===== Écran 1 : accueil / configuration ===== -->
+  <section class="screen screen-setup active" id="screenSetup">
+    <div class="setup-inner">
+      <h1 class="title">Mémoire <span class="title-accent">Trio</span></h1>
+      <p class="tagline">Un jeu à 3 pour tuer le temps dans la file — jusqu'à 15 minutes.</p>
 
-    <!-- Carte principale : timer -->
-    <section class="card timer-card" aria-live="polite">
-      <p class="timer-label" id="timerLabel">Aucun jeûne en cours</p>
-      <div class="timer-display" id="timerDisplay">00:00:00</div>
-      <p class="timer-start" id="timerStart"></p>
-
-      <div class="phase-block">
-        <div class="phase-header">
-          <span class="phase-name" id="phaseName">—</span>
-          <span class="phase-range" id="phaseRange"></span>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="progressFill"></div>
-        </div>
-        <p class="phase-desc" id="phaseDesc">Appuie sur « Commencer le jeûne » pour démarrer.</p>
+      <div class="rules">
+        <h2>Règles express</h2>
+        <ol>
+          <li>Regardez bien la séquence de couleurs qui clignote.</li>
+          <li>Reproduisez-la dans le même ordre en tapant les tuiles.</li>
+          <li>À chaque tour la séquence s'allonge d'une case.</li>
+          <li>3 vies par joueur. Une erreur = une vie en moins.</li>
+          <li>Dernier joueur en vie = gagnant. Passez-vous le téléphone !</li>
+        </ol>
       </div>
 
-      <div class="actions">
-        <button id="startBtn" class="btn btn-primary">Commencer le jeûne maintenant</button>
-        <button id="stopBtn" class="btn btn-danger hidden">J'ai mangé</button>
+      <div class="names">
+        <label>
+          <span>Joueur 1</span>
+          <input type="text" id="name1" maxlength="12" placeholder="Joueur 1" autocomplete="off" />
+        </label>
+        <label>
+          <span>Joueur 2</span>
+          <input type="text" id="name2" maxlength="12" placeholder="Joueur 2" autocomplete="off" />
+        </label>
+        <label>
+          <span>Joueur 3</span>
+          <input type="text" id="name3" maxlength="12" placeholder="Joueur 3" autocomplete="off" />
+        </label>
       </div>
-    </section>
 
-    <!-- Phases indicatives -->
-    <section class="card">
-      <h2>Phases du jeûne</h2>
-      <ul class="phases-list" id="phasesList"></ul>
-    </section>
+      <label class="option-row">
+        <input type="checkbox" id="soundToggle" checked />
+        <span>Sons activés</span>
+      </label>
 
-    <!-- Historique -->
-    <section class="card">
-      <h2>Historique (10 derniers jeûnes)</h2>
-      <ul class="history-list" id="historyList">
-        <li class="empty-state">Aucun jeûne enregistré pour l'instant.</li>
-      </ul>
-      <button id="clearHistoryBtn" class="btn btn-ghost hidden">Effacer l'historique</button>
-    </section>
+      <button class="btn btn-primary btn-xl" id="startBtn">C'est parti</button>
+    </div>
+  </section>
 
-    <!-- Avertissement médical -->
-    <section class="card disclaimer">
-      <h2>⚠️ Avertissement</h2>
-      <p>
-        Cette application est un outil <strong>personnel</strong> de suivi.
-        Elle ne remplace en aucun cas un avis médical.
-        <strong>Consulte un médecin</strong> avant d'entreprendre un jeûne prolongé,
-        notamment si tu es enceinte, diabétique, sous traitement, ou souffres
-        d'une pathologie particulière.
-      </p>
-    </section>
+  <!-- ===== Écran 2 : "passe le téléphone" ===== -->
+  <section class="screen screen-pass" id="screenPass">
+    <div class="pass-inner">
+      <p class="pass-hint">Passe le téléphone à</p>
+      <h2 class="pass-name" id="passName">—</h2>
+      <div class="pass-stats">
+        <p><span id="passLives">❤❤❤</span></p>
+        <p class="pass-round">Tour <span id="passRound">1</span> · séquence de <span id="passLen">3</span></p>
+      </div>
+      <button class="btn btn-primary btn-xl" id="readyBtn">Je suis prêt·e</button>
+      <p class="pass-scores" id="passScores"></p>
+    </div>
+  </section>
 
-  </main>
+  <!-- ===== Écran 3 : jeu ===== -->
+  <section class="screen screen-game" id="screenGame">
+
+    <header class="game-header">
+      <div class="hud-left">
+        <p class="hud-player" id="hudPlayer">—</p>
+        <p class="hud-lives" id="hudLives">❤❤❤</p>
+      </div>
+      <div class="hud-center">
+        <p class="hud-status" id="hudStatus">Regarde bien…</p>
+      </div>
+      <div class="hud-right">
+        <p class="hud-timer" id="hudTimer">15:00</p>
+        <button class="icon-btn" id="pauseBtn" aria-label="Pause">⏸</button>
+      </div>
+    </header>
+
+    <div class="progress">
+      <div class="progress-inner" id="progressInner"></div>
+      <p class="progress-label" id="progressLabel">0 / 3</p>
+    </div>
+
+    <div class="board" id="board">
+      <button class="tile" data-i="0" style="--tile:#ef4444" aria-label="rouge"></button>
+      <button class="tile" data-i="1" style="--tile:#3b82f6" aria-label="bleu"></button>
+      <button class="tile" data-i="2" style="--tile:#22c55e" aria-label="vert"></button>
+      <button class="tile" data-i="3" style="--tile:#eab308" aria-label="jaune"></button>
+      <button class="tile" data-i="4" style="--tile:#a855f7" aria-label="violet"></button>
+      <button class="tile" data-i="5" style="--tile:#f97316" aria-label="orange"></button>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+  </section>
+
+  <!-- ===== Écran 4 : pause ===== -->
+  <section class="screen screen-paused" id="screenPaused">
+    <div class="paused-inner">
+      <h2>En pause</h2>
+      <p>La file avance ? Reprends quand tu veux.</p>
+      <button class="btn btn-primary btn-xl" id="resumeBtn">Reprendre</button>
+      <button class="btn btn-ghost" id="quitBtn">Abandonner la partie</button>
+    </div>
+  </section>
+
+  <!-- ===== Écran 5 : fin de partie ===== -->
+  <section class="screen screen-end" id="screenEnd">
+    <div class="end-inner">
+      <h2 class="end-title" id="endTitle">Fin de partie</h2>
+      <p class="end-sub" id="endSub"></p>
+      <ol class="ranking" id="ranking"></ol>
+      <button class="btn btn-primary btn-xl" id="replayBtn">Rejouer</button>
+      <button class="btn btn-ghost" id="homeBtn">Changer les joueurs</button>
+    </div>
+  </section>
 
   <script src="script.js"></script>
 </body>

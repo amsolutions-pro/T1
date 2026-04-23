@@ -10,7 +10,7 @@
    ========================================================= */
 
 // -------- Constantes --------
-const APP_VERSION      = 'v0.3';
+const APP_VERSION      = 'v0.4';
 const NAMES_KEY        = 'memoireTrio.names';
 
 const TILE_COUNT       = 6;
@@ -560,6 +560,18 @@ function bindEvents() {
     };
     // Réactivité maximale : pointerdown plutôt que click
     t.addEventListener('pointerdown', handler);
+  });
+
+  // Sauvegarde des noms à la volée pendant la saisie
+  [el.name1, el.name2, el.name3].forEach(inp => {
+    inp.addEventListener('input', () => {
+      const typed = [
+        el.name1.value.trim().slice(0, 12),
+        el.name2.value.trim().slice(0, 12),
+        el.name3.value.trim().slice(0, 12),
+      ];
+      saveNames(typed);
+    });
   });
 
   // iOS/Safari : remettre l'audio en route au retour au premier plan

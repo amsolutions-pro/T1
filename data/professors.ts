@@ -18,6 +18,15 @@ export const PROFESSORS: Professor[] = [
     creneaux: "Lun–Jeu 17h–22h (Paris)",
     langue: "Français + Anglais",
     photo: "https://i.pravatar.cc/400?img=12",
+    jobTitle: "Professeur de mathématiques",
+    alumniOf: ["Université d'État d'Erevan (YSU)"],
+    knowsAbout: [
+      "Mathématiques",
+      "Olympiades de mathématiques",
+      "Algèbre",
+      "Théorie des nombres",
+      "Combinatoire",
+    ],
   },
   {
     slug: "lilit-grigoryan",
@@ -31,6 +40,18 @@ export const PROFESSORS: Professor[] = [
     creneaux: "Mar–Ven 18h–22h, Sam matin",
     langue: "Anglais",
     photo: "https://i.pravatar.cc/400?img=47",
+    jobTitle: "Professeur de physique",
+    alumniOf: [
+      "Université d'État d'Erevan (YSU)",
+      "Institut de physique d'Erevan (YerPhI)",
+    ],
+    knowsAbout: [
+      "Physique",
+      "Mécanique",
+      "Électromagnétisme",
+      "Thermodynamique",
+      "Olympiades de physique",
+    ],
   },
   {
     slug: "tigran-hovhannisyan",
@@ -44,6 +65,19 @@ export const PROFESSORS: Professor[] = [
     creneaux: "Lun–Ven 19h–23h",
     langue: "Anglais",
     photo: "https://i.pravatar.cc/400?img=33",
+    jobTitle: "Professeur d'informatique",
+    alumniOf: [
+      "Université américaine d'Arménie (AUA)",
+      "TUMO Centre for Creative Technologies",
+    ],
+    knowsAbout: [
+      "Informatique",
+      "Algorithmique",
+      "Programmation compétitive",
+      "Python",
+      "C++",
+      "Apprentissage automatique",
+    ],
   },
   {
     slug: "anahit-sargsyan",
@@ -57,6 +91,15 @@ export const PROFESSORS: Professor[] = [
     creneaux: "Lun, Mer, Ven 16h–21h",
     langue: "Français + Anglais",
     photo: "https://i.pravatar.cc/400?img=49",
+    jobTitle: "Professeur de mathématiques (classes préparatoires)",
+    alumniOf: ["Université d'État d'Erevan (YSU)"],
+    knowsAbout: [
+      "Mathématiques",
+      "Analyse",
+      "Algèbre linéaire",
+      "Concours scientifiques français",
+      "Préparation MPSI/MP",
+    ],
   },
   {
     slug: "samvel-aronian",
@@ -70,5 +113,14 @@ export const PROFESSORS: Professor[] = [
     creneaux: "Tous les jours 18h–22h",
     langue: "Anglais",
     photo: "https://i.pravatar.cc/400?img=68",
+    jobTitle: "Grand Maître International d'échecs (coach FIDE)",
+    alumniOf: ["Académie d'échecs Tigran Petrossian, Erevan"],
+    knowsAbout: [
+      "Échecs",
+      "Ouvertures",
+      "Finales",
+      "Stratégie échiquéenne",
+      "Préparation tournoi FIDE",
+    ],
   },
 ];

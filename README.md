@@ -136,6 +136,7 @@ app/
     mentions-legales/page.tsx
     layout.tsx
   api/
+    agents/route.ts        # GET → /.well-known/agents.json (LLM/AI manifest, via rewrite)
     checkout/route.ts      # POST → Stripe Checkout session + pending booking
     leads/route.ts         # POST → Supabase insert + Resend confirmation
     webhook/stripe/route.ts# POST → verify signature, confirm booking, email
@@ -148,7 +149,7 @@ components/
   sections/                # One file per page section
   ui/                      # Handcrafted shadcn primitives
   FadeIn.tsx               # Scroll-triggered reveal (a11y-aware)
-  JsonLd.tsx               # Organization + Product + FAQ JSON-LD
+  JsonLd.tsx               # EducationalOrg + Service + Offer + Course×6 + Person×N + FAQ JSON-LD
   LeadForm.tsx
   PlausibleScript.tsx
   ProfessorCard.tsx

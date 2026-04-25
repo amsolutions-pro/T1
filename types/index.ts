@@ -16,4 +16,10 @@ export interface Professor {
   langue: Language;
   /** Path to a square photo under /public. Placeholder is fine. */
   photo: string;
+  /** Job title in the schema.org sense (used for Person.jobTitle). */
+  jobTitle: string;
+  /** Institution(s) the professor graduated from (Person.alumniOf). */
+  alumniOf: string[];
+  /** Areas of expertise advertised to crawlers (Person.knowsAbout). */
+  knowsAbout: string[];
 }

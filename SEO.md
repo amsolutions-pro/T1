@@ -40,13 +40,32 @@ Legal pages set `robots: { index: false }` so they stay out of the index.
 
 ## Structured data (JSON-LD)
 
-Three blocks rendered by `components/JsonLd.tsx` and included on the home page:
+All blocks are rendered by `components/JsonLd.tsx`, mounted from `app/layout.tsx` (so they appear at the top of `<body>` on every route). Each block is emitted as its own `<script type="application/ld+json">` tag, which is the pattern Google recommends.
 
-1. **Organization** — name, URL, logo, contact point, LinkedIn `sameAs`.
-2. **Product** — *Cours d'essai ArmenSTEM*, EUR 10.00, `availability: InStock`.
-3. **FAQPage** — pulls the 6 Q/A pairs straight from `components/sections/FAQ.tsx` so the structured data never drifts from the visible content.
+| Block | `@type` | What it documents |
+| --- | --- | --- |
+| 1 | `EducationalOrganization` | Name, description, URL, logo, `sameAs` (LinkedIn), contact point, languages, `areaServed: France`. |
+| 2 | `Service` | "Cours particulier en visio". `provider: ArmenSTEM`, `areaServed: France`, `availableChannel`, `audience` (lycée + prépa), `offers` (25 €/h). |
+| 3 | `Offer` | Cours d'essai à 10 € EUR. `validFrom` = build date, `priceValidUntil` = build date + 365 j, `eligibleRegion: France`. |
+| 4–9 | `Course` × 6 | Maths lycée, Maths prépa, Physique lycée, Physique prépa, Informatique, Échecs. Chacun avec `provider`, `educationalLevel`, `about`, `courseMode: online`, `hasCourseInstance`, et `offers` 25 €/h. |
+| 10–14 | `Person` × N | Une fiche par professeur affiché. `name`, `jobTitle`, `image`, `description`, `knowsLanguage`, `knowsAbout`, `award` (médailles), `alumniOf` (institutions), `worksFor: ArmenSTEM`. Données sourcées depuis `data/professors.ts`. |
+| 15 | `FAQPage` | Les 6 Q/R extraites de `components/sections/FAQ.tsx` — la source unique évite toute dérive entre le rendu visible et le markup structuré. |
 
-Validate with the [Rich Results Test](https://search.google.com/test/rich-results) before launch.
+Toutes les références croisées entre blocs utilisent `@id` (`#organization`, `#service`, `#offer-trial`, `#course-<slug>`, `#prof-<slug>`, `#faq`).
+
+**Validation avant mise en ligne :**
+- [validator.schema.org](https://validator.schema.org/) — passe les 15 blocs.
+- [Rich Results Test](https://search.google.com/test/rich-results) — vérifie l'éligibilité aux résultats enrichis (FAQ, Course, Offer).
+- Tester aussi en preview Vercel : copier-coller la HTML rendu dans le validator pour s'assurer que `process.env.NEXT_PUBLIC_SITE_URL` produit les bonnes URLs absolues.
+
+## AI-crawler manifest (`/.well-known/agents.json`)
+
+Inspiré du pattern informel `llms.txt`. Manifeste en JSON simple, en langage naturel, à destination des crawlers IA / LLM qui n'interprètent pas le JSON-LD.
+
+- **URL publique** : `https://armenstem.fr/.well-known/agents.json`
+- **Implémentation** : route handler `app/api/agents/route.ts` + rewrite dans `next.config.js` (le App Router ne supporte pas de manière fiable un dossier commençant par un point).
+- **Cache** : `public, max-age=3600, s-maxage=86400`.
+- **Contenu** : nom, description, langues, services (essai 10 €, cours 25 €/h), audience, contact, fiches profs publiques (slug + URL d'ancre `#prof-<slug>` qui correspond à l'`@id` JSON-LD), liens vers CGV / mentions / confidentialité.
 
 ## sitemap.xml & robots.txt
 
@@ -86,5 +105,6 @@ Plausible is loaded only when both `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` and `NEXT_PUBL
 - [ ] Submit sitemap in Bing Webmaster Tools
 - [ ] Verify Open Graph rendering on Facebook/LinkedIn debuggers
 - [ ] Run Lighthouse on production URL (target ≥ 95 on all four)
-- [ ] Validate JSON-LD with Rich Results Test
+- [ ] Validate JSON-LD with Rich Results Test **and** validator.schema.org
+- [ ] Verify `/.well-known/agents.json` returns 200 with `Content-Type: application/json`
 - [ ] Configure Plausible goals from the `data-event` attributes

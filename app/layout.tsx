@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, IBM_Plex_Sans } from "next/font/google";
 import { PlausibleScript } from "@/components/PlausibleScript";
+import { JsonLd } from "@/components/JsonLd";
 import { getClientEnv } from "@/lib/env";
 import "./globals.css";
 
@@ -87,6 +88,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" className={`${inter.variable} ${plex.variable}`}>
       <body className="font-sans">
+        {/*
+          JSON-LD blocks are emitted at the very top of <body>. Google
+          treats application/ld+json identically wherever it appears in
+          the document; rendering it here keeps it on every route.
+        */}
+        <JsonLd siteUrl={siteUrl} />
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-brand-blue focus:px-4 focus:py-2 focus:text-white"

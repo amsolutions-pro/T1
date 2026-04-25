@@ -21,6 +21,14 @@ const nextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      // Plain-language manifest for AI/LLM crawlers, served at the
+      // canonical /.well-known/ location (App Router doesn't allow a
+      // leading-dot folder reliably, so we proxy to a normal route).
+      { source: "/.well-known/agents.json", destination: "/api/agents" },
+    ];
+  },
 };
 
 module.exports = nextConfig;

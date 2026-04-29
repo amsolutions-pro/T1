@@ -1,76 +1,245 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="hy">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0f172a" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Compteur de jeûne</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Անի Մելիքсեթյան - Ինտerakтիվ Դосիե</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        opera: {
+                            50: '#fdf2f4',
+                            100: '#fbe6ea',
+                            500: '#d92644',
+                            800: '#9e152d',
+                            900: '#851528',
+                        },
+                        stone: {
+                            850: '#1c1917'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['system-ui', '-apple-system', 'sans-serif'],
+                        serif: ['Georgia', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background-color: #fdfcfb;
+            color: #2d2d2d;
+        }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: auto;
+            height: 350px; 
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .skill-card:hover {
+            border-color: #9e152d;
+            background-color: #fdf2f4;
+        }
+    </style>
 </head>
-<body>
-  <header class="app-header">
-    <h1>Compteur de jeûne</h1>
-    <button id="themeToggle" class="icon-btn" aria-label="Basculer le mode sombre">
-      <span id="themeIcon">🌙</span>
-    </button>
-  </header>
+<body class="antialiased">
 
-  <main class="app-main">
-
-    <!-- Carte principale : timer -->
-    <section class="card timer-card" aria-live="polite">
-      <p class="timer-label" id="timerLabel">Aucun jeûne en cours</p>
-      <div class="timer-display" id="timerDisplay">00:00:00</div>
-      <p class="timer-start" id="timerStart"></p>
-
-      <div class="phase-block">
-        <div class="phase-header">
-          <span class="phase-name" id="phaseName">—</span>
-          <span class="phase-range" id="phaseRange"></span>
+    <nav class="bg-white/80 backdrop-blur-md border-b border-stone-200 sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-6 h-16 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl">🇦🇲</span>
+                <span class="font-bold text-lg tracking-tight text-stone-800">ԱՆԻ ՄЕЛИQСЕTHЯН</span>
+            </div>
+            <div class="hidden sm:flex gap-6 text-sm font-medium text-stone-600">
+                <a href="#about" class="hover:text-opera-800 transition-colors">Անhատականություն</a>
+                <a href="#talents" class="hover:text-opera-800 transition-colors">Տаղанднер</a>
+                <a href="#stats" class="hover:text-opera-800 transition-colors">Усумнakan</a>
+            </div>
         </div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="progressFill"></div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-6 py-12 space-y-24">
+
+        <section id="about" class="text-center space-y-8 fade-in">
+            <div class="inline-block relative">
+                <div class="w-32 h-32 bg-opera-100 rounded-full flex items-center justify-center text-6xl shadow-inner border-2 border-opera-50">
+                    ✨
+                </div>
+                <div class="absolute -bottom-2 -right-2 bg-white px-3 py-1 rounded-full shadow-sm border border-stone-100 text-xs font-bold text-opera-800">
+                    2027 Практика
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <h1 class="text-5xl font-serif text-stone-900">Անи Мелиqсетhян</h1>
+                <p class="text-xl text-stone-600 max-w-2xl mx-auto leading-relaxed">
+                    Ֆрансиайи Поль Кле qоlejи аshакертуhи, ум бнутаhрум ен стеhаgorцаkан энерjiайн, усумнаkан барцр карgапаhутhюнн у hайkаkан мshакуythi hандеп хор серн:
+                </p>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-4 text-sm">
+                <span class="px-4 py-2 bg-stone-100 rounded-full text-stone-700">📍 Тhие, Ֆрансиа</span>
+                <span class="px-4 py-2 bg-stone-100 rounded-full text-stone-700">🎂 18 Hулиси, 2012</span>
+                <span class="px-4 py-2 bg-stone-100 rounded-full text-stone-700">📚 8-рд дасаран</span>
+            </div>
+        </section>
+
+        <section id="talents" class="space-y-12">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-stone-800">Арвесты ворпес апрелаkерп</h2>
+                <p class="text-stone-500 mt-2">Аниии базмаkоgмнаkан зарgацумн ераjshtутhян у тhатроны волортум</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="skill-card p-8 rounded-2xl border border-stone-200 transition-all duration-300 text-center">
+                    <div class="text-4xl mb-4">🎭</div>
+                    <h3 class="text-xl font-bold text-stone-800">Тhатрон</h3>
+                    <p class="text-opera-800 font-bold text-sm mb-3">5 Тари</p>
+                    <p class="text-stone-600 text-sm">"La Tribu du Verbe" студиайи сан: Бемаkан хоски, дерасанаkан варпетутhян у инkнартаhайтман пордзи:</p>
+                </div>
+
+                <div class="skill-card p-8 rounded-2xl border border-stone-200 transition-all duration-300 text-center">
+                    <div class="text-4xl mb-4">🥁</div>
+                    <h3 class="text-xl font-bold text-stone-800">Харвацаин горцикнер</h3>
+                    <p class="text-opera-800 font-bold text-sm mb-3">3 Тари</p>
+                    <p class="text-stone-600 text-sm">Тhиейи Арвестнери академиа: Ритhми зgацогутhян зарgацум у hамуйтаин аshхатанки kарогутhюн:</p>
+                </div>
+
+                <div class="skill-card p-8 rounded-2xl border border-stone-200 transition-all duration-300 text-center">
+                    <div class="text-4xl mb-4">🎹</div>
+                    <h3 class="text-xl font-bold text-stone-800">Даshнамур</h3>
+                    <p class="text-opera-800 font-bold text-sm mb-3">2 Тари</p>
+                    <p class="text-stone-600 text-sm">Тhиейи Арвестнери академиа: Ераjshtутhян теориайи hимункнери тирапетум у дасакан ераjshtутhян энкалум:</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="stats" class="bg-white p-10 rounded-3xl shadow-sm border border-stone-100">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6">
+                    <h2 class="text-3xl font-bold text-stone-800 leading-tight">Усумнаkан hаjогутhюннер</h2>
+                    <p class="text-stone-600">Аниин уни пеноменал аhаjадиmутhюн&#8203; <span class="font-bold text-opera-800">18,9/20</span> митhин гнаhатаkановm: Нра уjех kортhн hаваракшвацутhюнн е гитутhюннери у арвестнери мижев:</p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 bg-opera-50 rounded-lg flex items-center justify-center text-opera-800 font-bold">A+</div>
+                            <div>
+                                <p class="font-bold text-stone-800">Лезунери тирапетум</p>
+                                <p class="text-xs text-stone-500">Ֆрансерен (майрени), англерен, германерен, латинерен</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 bg-opera-50 rounded-lg flex items-center justify-center text-opera-800 font-bold">95%</div>
+                            <div>
+                                <p class="font-bold text-stone-800">Гитаkан урhвацутhюн</p>
+                                <p class="text-xs text-stone-500">Матhематиkа у Ֆизиkа-qимиа (Барцр аhаjадимутhюн)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="aniRadarChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="space-y-8">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-stone-800">Инчпес&#8203; են бнутаhрум усуциchнерн?</h2>
+                <p class="text-stone-500 mt-2">Аниии анhатаkанутhюнн маснагитаkан hайацков</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="p-6 bg-stone-50 rounded-xl border-l-4 border-opera-800">
+                    <p class="italic text-stone-700">«Аниин цуцабером е бацарjикалин лрjутhюн ир аshхатанки у варки нкатмамб: Нра дитаркумнери миjтн тегин ен у hетаkрqир:»</p>
+                    <p class="mt-4 text-xs font-bold text-stone-500 uppercase">— Ֆranсерени усуцich</p>
+                </div>
+                <div class="p-6 bg-stone-50 rounded-xl border-l-4 border-opera-800">
+                    <p class="italic text-stone-700">«Стеhаgorцаkан эntузиазм у анhатаkан мотецум ямнаkانчh нахаgдзин: Hианалي арdунkнер:»</p>
+                    <p class="mt-4 text-xs font-bold text-stone-500 uppercase">— Арвести усуцich</p>
+                </div>
+                <div class="p-6 bg-stone-50 rounded-xl border-l-4 border-opera-800">
+                    <p class="italic text-stone-700">«Хмби hамар искакан шарживи уjс е: Аkтив мас-накцутhюн у барцр оракутhяни аshхатанk:»</p>
+                    <p class="mt-4 text-xs font-bold text-stone-500 uppercase">— Матhематиkайи усуцich</p>
+                </div>
+                <div class="p-6 bg-stone-50 rounded-xl border-l-4 border-opera-800">
+                    <p class="italic text-stone-700">«Миjтш шат лурj у kамаин: Патраст е цанkаcaд мартаhрavirus:»</p>
+                    <p class="mt-4 text-xs font-bold text-stone-500 uppercase">— Ֆиздастиаракутhян усуцich</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-900 text-stone-400 py-12 px-6">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="text-center md:text-left">
+                <p class="text-white font-bold">Անи Мелиqсетhян</p>
+                <p class="text-sm">Дпроcакан практиkайи досие - 2027тh.</p>
+            </div>
+            <div class="flex gap-4">
+                <span class="text-stone-600">||</span>
+                <p class="text-sm italic text-stone-500">Неркаяцвац е Операйи у балети азгаин тhатрони hамар</p>
+            </div>
         </div>
-        <p class="phase-desc" id="phaseDesc">Appuie sur « Commencer le jeûne » pour démarrer.</p>
-      </div>
+    </footer>
 
-      <div class="actions">
-        <button id="startBtn" class="btn btn-primary">Commencer le jeûne maintenant</button>
-        <button id="stopBtn" class="btn btn-danger hidden">J'ai mangé</button>
-      </div>
-    </section>
-
-    <!-- Phases indicatives -->
-    <section class="card">
-      <h2>Phases du jeûne</h2>
-      <ul class="phases-list" id="phasesList"></ul>
-    </section>
-
-    <!-- Historique -->
-    <section class="card">
-      <h2>Historique (10 derniers jeûnes)</h2>
-      <ul class="history-list" id="historyList">
-        <li class="empty-state">Aucun jeûne enregistré pour l'instant.</li>
-      </ul>
-      <button id="clearHistoryBtn" class="btn btn-ghost hidden">Effacer l'historique</button>
-    </section>
-
-    <!-- Avertissement médical -->
-    <section class="card disclaimer">
-      <h2>⚠️ Avertissement</h2>
-      <p>
-        Cette application est un outil <strong>personnel</strong> de suivi.
-        Elle ne remplace en aucun cas un avis médical.
-        <strong>Consulte un médecin</strong> avant d'entreprendre un jeûne prolongé,
-        notamment si tu es enceinte, diabétique, sous traitement, ou souffres
-        d'une pathologie particulière.
-      </p>
-    </section>
-
-  </main>
-
-  <script src="script.js"></script>
+    <script>
+        const ctx = document.getElementById('aniRadarChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['Лезунер', 'Hумaнитар', 'Матhематиkа', 'Гитутhюн', 'Арвест', 'Спорт'],
+                datasets: [{
+                    label: 'Аhаjадимутhюн',
+                    data: [19.7, 18.2, 18.9, 17.5, 19.8, 17.0],
+                    backgroundColor: 'rgba(158, 21, 45, 0.15)',
+                    borderColor: 'rgba(158, 21, 45, 1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#9e152d'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        beginAtZero: false,
+                        min: 10,
+                        max: 20,
+                        ticks: { display: false, stepSize: 2 },
+                        pointLabels: {
+                            font: { size: 12, weight: '600' },
+                            color: '#444'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    </script>
 </body>
 </html>

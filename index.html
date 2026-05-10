@@ -2,75 +2,95 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0f172a" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Compteur de jeûne</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>amsolutions-pro</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      max-width: 420px;
+      padding: 2rem;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+      color: #60a5fa;
+    }
+    p {
+      color: #94a3b8;
+      margin-bottom: 3rem;
+    }
+    .card {
+      background: #1e2937;
+      border-radius: 16px;
+      padding: 1.8rem;
+      margin-bottom: 1.5rem;
+      transition: all 0.3s ease;
+      border: 1px solid #334155;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: #60a5fa;
+    }
+    button {
+      width: 100%;
+      padding: 1.1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 0.8rem;
+    }
+    .btn-fasting {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+    }
+    .btn-game {
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      color: white;
+    }
+    .footer {
+      margin-top: 3rem;
+      font-size: 0.9rem;
+      color: #64748b;
+    }
+  </style>
 </head>
 <body>
-  <header class="app-header">
-    <h1>Compteur de jeûne</h1>
-    <button id="themeToggle" class="icon-btn" aria-label="Basculer le mode sombre">
-      <span id="themeIcon">🌙</span>
-    </button>
-  </header>
+  <div class="container">
+    <h1>amsolutions</h1>
+    <p>Choisissez votre application</p>
 
-  <main class="app-main">
+    <div class="card">
+      <h2>⏱️ Compteur de Jeûne</h2>
+      <p>Suivez vos jeûnes, phases, historique et progression.</p>
+      <button class="btn-fasting" onclick="window.location.href='https://amsolutions-pro.github.io/T1/fasting/'">
+        Accéder au compteur de jeûne
+      </button>
+    </div>
 
-    <!-- Carte principale : timer -->
-    <section class="card timer-card" aria-live="polite">
-      <p class="timer-label" id="timerLabel">Aucun jeûne en cours</p>
-      <div class="timer-display" id="timerDisplay">00:00:00</div>
-      <p class="timer-start" id="timerStart"></p>
+    <div class="card">
+      <h2>🎮 Mémoire Trio</h2>
+      <p>Jeu de mémoire à plusieurs joueurs (2 à 5). Parfait pour patienter.</p>
+      <button class="btn-game" onclick="window.location.href='https://amsolutions-pro.github.io/T1/game/'">
+        Jouer à Mémoire Trio
+      </button>
+    </div>
 
-      <div class="phase-block">
-        <div class="phase-header">
-          <span class="phase-name" id="phaseName">—</span>
-          <span class="phase-range" id="phaseRange"></span>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="progressFill"></div>
-        </div>
-        <p class="phase-desc" id="phaseDesc">Appuie sur « Commencer le jeûne » pour démarrer.</p>
-      </div>
-
-      <div class="actions">
-        <button id="startBtn" class="btn btn-primary">Commencer le jeûne maintenant</button>
-        <button id="stopBtn" class="btn btn-danger hidden">J'ai mangé</button>
-      </div>
-    </section>
-
-    <!-- Phases indicatives -->
-    <section class="card">
-      <h2>Phases du jeûne</h2>
-      <ul class="phases-list" id="phasesList"></ul>
-    </section>
-
-    <!-- Historique -->
-    <section class="card">
-      <h2>Historique (10 derniers jeûnes)</h2>
-      <ul class="history-list" id="historyList">
-        <li class="empty-state">Aucun jeûne enregistré pour l'instant.</li>
-      </ul>
-      <button id="clearHistoryBtn" class="btn btn-ghost hidden">Effacer l'historique</button>
-    </section>
-
-    <!-- Avertissement médical -->
-    <section class="card disclaimer">
-      <h2>⚠️ Avertissement</h2>
-      <p>
-        Cette application est un outil <strong>personnel</strong> de suivi.
-        Elle ne remplace en aucun cas un avis médical.
-        <strong>Consulte un médecin</strong> avant d'entreprendre un jeûne prolongé,
-        notamment si tu es enceinte, diabétique, sous traitement, ou souffres
-        d'une pathologie particulière.
-      </p>
-    </section>
-
-  </main>
-
-  <script src="script.js"></script>
+    <div class="footer">
+      Made with ❤️ by amsolutions-pro
+    </div>
+  </div>
 </body>
 </html>
